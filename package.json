@@ -1,0 +1,34 @@
+{
+  "name": "nightly-charger",
+  "version": "0.0.1",
+  "description": "\"A tray system tool to save on your energy bill remind you when is cheaper to charge your laptop\"",
+  "main": "battery.html",
+  "window": {
+    "show": false,
+    "toolbar": false,
+    // "toolbar": true,
+    "frame": false,
+    "position": "center",
+    "width": 620,
+    "height": 274,
+    "min_width": 620,
+    "min_height": 274,
+    "left": 100,
+    "top": 100
+  },
+  // "main": "index.js",
+  "scripts": {
+   "test": "nodeunit test"
+  },
+  "keywords": [
+    "battery",
+    "charger",
+    "save",
+    "eco",
+    "cheap",
+    "energy",
+    "electricity"
+  ],
+  "author": "Jaime Agudo <jaime.agudo.lopez@gmail.com>",
+  "license": "MIT"
+}
