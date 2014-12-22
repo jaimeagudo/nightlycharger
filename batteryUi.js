@@ -1,36 +1,40 @@
-var UI = (function() {
+// github.com/jaimeagudo
+// Extracted from https://github.com/GoogleChrome/chrome-app-samples
+// Apache License Version 2.0, January 2004 http://www.apache.org/licenses/
 
-  // Common functions used for tweaking UI elements.
-  function UI() { }
+var Battery = (function() {
+
+  // Common functions used for tweaking Battery elements.
+  function Battery() { }
 
   // Global instance.
   var instance;
 
-  UI.prototype.resetState = function(noDevices) {
-    document.getElementById('no-devices-error').hidden = !noDevices;
-    document.getElementById('info-div').hidden = noDevices;
-    this.clearAllFields();
+   Battery.prototype.show = function(){
+   	document.getElementById('no-devices-error').hidden = true;
+    document.getElementById('info-div').hidden = false;
+   }
+
+  Battery.prototype.hide = function(b) {
+    document.getElementById('no-devices-error').hidden = false;
+    document.getElementById('info-div').hidden = true;
   };
 
-  UI.prototype.clearAllFields = function() {
-    this.setBatteryLevel(null);
-  };
+  Battery.prototype.setLevel = function(level) {
 
-  UI.prototype.setBatteryLevel = function(level) {
+	if(typeof level !== "number"){
+		this.hide();
+		return;
+	} else{
+		this.show();
+	}
 
     var levelField = document.getElementById('battery-level');
-    var value = (level == null) ? '-' : level + ' %';
 
     levelField.innerHTML = '';
-    levelField.appendChild(document.createTextNode(value));
+    levelField.appendChild(document.createTextNode(level + ' %'));
 
     var batteryBox = document.getElementById('battery-level-box');
-
-    if (level == null) {
-      batteryBox.style.width = '0%';
-      return;
-    }
-
     var levelClass;
 
     if (level > 65) {
@@ -43,15 +47,12 @@ var UI = (function() {
 
     batteryBox.className = 'level ' + levelClass;
     batteryBox.style.width = level + '%';
-    console.log("done");
   };
-
- 
 
   return {
     getInstance: function() {
       if (!instance) {
-        instance = new UI();
+        instance = new Battery();
       }
 
       return instance;
