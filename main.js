@@ -1,6 +1,10 @@
 "use strict";
 
 	var REFRESH_INTERVAL=1000; //milliseconds
+	var NOTIFICATIONS_SHOWTIME=1000; //milliseconds
+	var MIN_CHARGING_PERCENTAGE=40;
+	var MAX_CHARGING_PERCENTAGE=80;
+
 	var Q = require("q");
 	var spawn = require('child_process').spawn;
 
@@ -100,13 +104,63 @@ function ubuntuBatteryParser(cmdOutput){
 	var status={};
 }
 
+
+function showPluginNotification(title,sticky){
+
+
+	var notification = new Notification(title,{
+		icon: "http://reedimage.jpg",
+		body: "Please plug in the charger"
+	});
+
+	notification.onshow = function () {
+	  // play sound on show
+	  // myAud=document.getElementById("audio1");
+	  // myAud.play();
+
+	  // auto close after NOTIFICATIONS_SHOWTIME
+	  if(!sticky)
+	  	setTimeout(function() {notification.close();}, NOTIFICATIONS_SHOWTIME);
+	}
+}
+
+
+function showUnplugNotification(title,sticky){
+
+	var notification = new Notification(tittle,{
+		icon: "http://greenimage.jpg",
+		body: "Please unplug the charger"
+	});
+	console.log("notif" );
+
+	notification.onshow = function () {
+	  // play sound on show
+	  // myAud=document.getElementById("audio1");
+	  // myAud.play();
+
+	  // auto close after NOTIFICATIONS_SHOWTIME
+	  if(!sticky)
+	  	setTimeout(function() {notification.close();}, NOTIFICATIONS_SHOWTIME);
+	}
+}
+
 /**
 * updates UI 
 */
 function outlet(batStatus){
 
 	console.log(batStatus);
-	Battery.getInstance().setLevel(batStatus.batteryLevel);
+	Battery.getInstance(MAX_CHARGING_PERCENTAGE,MIN_CHARGING_PERCENTAGE).setLevel(batStatus.batteryLevel);
+	if(batStatus.batteryLevel > MAX_CHARGING_PERCENTAGE)
+		showUnplugNotification(MAX_CHARGING_PERCENTAGE + " battery level reached");
+
+	if(batStatus.batteryLevel < MIN_CHARGING_PERCENTAGE)
+		showPluginNotification(MIN_CHARGING_PERCENTAGE + " battery level reached");
+
+// showUnplugNotification(MAX_CHARGING_PERCENTAGE + " battery level reached");
+
+
+
 
 	// batStatus.remainingBatteryTime;
 	// batStatus.charging;
@@ -122,7 +176,9 @@ function batteryWatchDog(command,args,stdoutParser,errorCB){
 
 window.onload = function() {
   
-	// Battery.getInstance().setLevel(0);
+	//DEV TOFIX
+	require('nw.gui').Window.get().showDevTools();
+
 	require("nw.gui").Window.get().show();
 
 
@@ -157,7 +213,17 @@ window.onload = function() {
 	batteryWatchDog(cmd,args,parser,errorCB);
 	window.setInterval(batteryWatchDog.bind(undefined,cmd,args,parser,errorCB), REFRESH_INTERVAL); 
 
+
+
+
 }
+
+
+
+
+
+
+
 
 
 

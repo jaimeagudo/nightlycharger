@@ -5,7 +5,10 @@
 var Battery = (function() {
 
   // Common functions used for tweaking Battery elements.
-  function Battery() { }
+  function Battery(MAX_LEVEL, MIN_LEVEL) {
+  	this.MAX_LEVEL=MAX_LEVEL;
+  	this.MIN_LEVEL=MIN_LEVEL;
+  }
 
   // Global instance.
   var instance;
@@ -52,7 +55,7 @@ var Battery = (function() {
   return {
     getInstance: function() {
       if (!instance) {
-        instance = new Battery();
+        instance = new Battery(arguments);
       }
 
       return instance;
