@@ -50,6 +50,7 @@ function darwinBatteryParser(cmdOutput){
 
 	var batteryLevelRE=/[0-9][0-9]?[0-9]?(?=%;)/
 	var remainingBatteryTimeRE=/[0-9][0-9]?:[0-9][0-9]?(?= remaining)/i
+	var dischargingRE=/discharging/i
 
 	var batteryLevel;
 	var matches;
@@ -74,17 +75,19 @@ function darwinBatteryParser(cmdOutput){
 	matches=cmdOutput.match(remainingBatteryTimeRE);
 	if(matches && matches.length){
 		 console.log(matches[0]);
-	//TODO		parseTime
+	   	//TODO		parseTime
 		// var batteryLevel=parseInt(matches[0]);
-
 		// if(isNaN(batteryLevel))
 			// console.log("Darwin script failed to figure out battery remaining time")
 		// else{
 			status.remainingBatteryTime=matches[0];
 
-
 		// }
 	}
+
+	matches=cmdOutput.match(dischargingRE);
+	status.charging=! (matches && matches.length && (typeof matches[0] == "string"));
+
 	return status;
 }
 
@@ -112,6 +115,10 @@ function showPluginNotification(title,sticky){
 		icon: "http://reedimage.jpg",
 		body: "Please plug in the charger"
 	});
+
+	// notification.onclick = function () {
+	// 	notification.close();
+	// }
 
 	notification.onshow = function () {
 	  // play sound on show
@@ -151,11 +158,13 @@ function outlet(batStatus){
 
 	console.log(batStatus);
 	Battery.getInstance(MAX_CHARGING_PERCENTAGE,MIN_CHARGING_PERCENTAGE).setLevel(batStatus.batteryLevel);
-	if(batStatus.batteryLevel > MAX_CHARGING_PERCENTAGE)
-		showUnplugNotification(MAX_CHARGING_PERCENTAGE + " battery level reached");
-
-	if(batStatus.batteryLevel < MIN_CHARGING_PERCENTAGE)
-		showPluginNotification(MIN_CHARGING_PERCENTAGE + " battery level reached");
+	if(batStatus.charging){
+		if(batStatus.batteryLevel > MAX_CHARGING_PERCENTAGE)
+			showUnplugNotification(MAX_CHARGING_PERCENTAGE + " battery level reached");
+	}else{
+		if(batStatus.batteryLevel < MIN_CHARGING_PERCENTAGE)
+			showPluginNotification(MIN_CHARGING_PERCENTAGE + " battery level reached");
+	}
 
 // showUnplugNotification(MAX_CHARGING_PERCENTAGE + " battery level reached");
 
