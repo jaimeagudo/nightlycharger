@@ -1,16 +1,31 @@
+"use strict";
+
+	var REFRESH_INTERVAL=1000; //milliseconds
+	var Q = require("q");
+	var spawn = require('child_process').spawn;
 
 
 
-function runCommand(cmd, args, cb, endCb) {
-    var spawn = require('child_process').spawn,
-        child = spawn(cmd, args),
-        me = this;
-    child.stdout.on('data', function (buffer) { cb(me, buffer) });
-    child.stdout.on('end', endCb);
+function runCommand(cmd, args) {
+    var deferred = Q.defer();
+    var child = spawn(cmd, args);
+
+    child.stdout.on('data', function (buffer) { 
+    	child.stdout += buffer.toString();
+    	deferred.notify();
+    });
+
+    child.stdout.on('end',function(){
+    	deferred.resolve(child.stdout);
+    });
+
+	child.stderr.on('data', function (data) {
+	  console.log('stderr: ' + data);
+	  deferred.reject(new Error("stdeerr: " + data));  
+	});
+
+    return deferred.promise;
 }
-
-
-
 
 window.onfocus = function() { 
   console.log("focus");
@@ -29,68 +44,119 @@ window.onresize = function() {
 
 function darwinBatteryParser(cmdOutput){
 
-	var matches=cmdOutput.match(/[0-9][0-9]?[0-9]?%;/);
+	var batteryLevelRE=/[0-9][0-9]?[0-9]?(?=%;)/
+	var remainingBatteryTimeRE=/[0-9][0-9]?:[0-9][0-9]?(?= remaining)/i
 
+	var batteryLevel;
+	var matches;
+	var status={};
+
+	console.log("parsing darwin battery status");
+
+	matches=cmdOutput.match(batteryLevelRE);
 	if(matches && matches.length){
-		var stringNumber=matches[0].replace("%;","");
-		bateryLevel=parseInt(stringNumber);
-		if(isNaN(bateryLevel))
+		batteryLevel=parseInt(matches[0]);
+		if(isNaN(batteryLevel))
 			console.log("Darwin script failed to figure out battery level")
-		else
-			return bateryLevel;
+		else{
+			status.batteryLevel=batteryLevel;
+			// batteryLevel;
+			// var b= { batteryLevel: batteryLevel,
+			// 		 remainingBatteryTime: 100,
+			// 		 charging: true };
+		}
 	}
-	return null;
+
+	matches=cmdOutput.match(remainingBatteryTimeRE);
+	if(matches && matches.length){
+		 console.log(matches[0]);
+	//TODO		parseTime
+		// var batteryLevel=parseInt(matches[0]);
+
+		// if(isNaN(batteryLevel))
+			// console.log("Darwin script failed to figure out battery remaining time")
+		// else{
+			status.remainingBatteryTime=matches[0];
+
+
+		// }
+	}
+	return status;
 }
 
 
 function ubuntuBatteryParser(cmdOutput){
-
+	var status={};
 
 	if(cmdOutput && cmdOutput.length){
-		bateryLevel=parseInt(cmdOutput);
-		if(isNaN(bateryLevel))
+		var batteryLevel=parseInt(cmdOutput);
+		if(isNaN(batteryLevel))
 			console.log("Ubuntu script failed to figure out battery level")
 		else
-			return bateryLevel;
+			return { batteryLevel: batteryLevel,
+					 remainingBatteryTime: 100,
+					 charging: false };
 	}
-	return null;
+	var status={};
+}
+
+/**
+* updates UI 
+*/
+function outlet(batStatus){
+
+	console.log(batStatus);
+	Battery.getInstance().setLevel(batStatus.batteryLevel);
+
+	// batStatus.remainingBatteryTime;
+	// batStatus.charging;
 }
 
 
+function batteryWatchDog(command,args,stdoutParser,errorCB){
+
+	runCommand(command, args)
+	.then(stdoutParser,errorCB)
+	.then(outlet,errorCB);
+}
+
 window.onload = function() {
   
-	Battery.getInstance().setLevel(0);
+	// Battery.getInstance().setLevel(0);
 	require("nw.gui").Window.get().show();
-	var command, args;
 
-	switch(process.platform){
-		case "win32":
-		break;
-		case 'darwin':
-			command ="pmset"
-			args=["-g", "batt"];
-			bInfoParser=darwinBatteryParser;
+
+	var cmd, args, parser;
+	var errorCB=function(e){
+		console.log("error" + e);
+	};
+
+	//Setup custom battery script and parser based on the running OS
+	switch(process.platform){ 
+		case "win32": 
+//http://www.robvanderwoude.com/files/battstat_xp.txt
+//http://blogs.technet.com/b/heyscriptingguy/archive/2013/05/01/powertip-use-powershell-to-show-remaining-battery-time.aspx
+//		(Get-WmiObject win32_battery).estimatedChargeRemaining
+		case "darwin": 
+			cmd="pmset";              
+			args=["-g", "batt"];       
+			parser=darwinBatteryParser;  
 			break;
-		case 'freebsd':
-		break;
-		case 'linux':
-			command="upower -i $(upower -e | grep BAT) | grep --color=never -E percentage|xargs|cut -d' ' -f2|sed s/%//"
-			bInfoParser=ubuntuBatteryParser;
+		default:
 			break;
 		case 'sunos' :
-		break;
+		case "freebsd":
+		case "linux":
+			cmd="upower -i $(upower -e | grep BAT) | grep --color=never -E percentage|xargs|cut -d' ' -f2|sed s/%//"
+			args=null;
+			parser=ubuntuBatteryParser;
+			break;
+	};
 
-	}
+	//Start Polling battery status at defined period
+	batteryWatchDog(cmd,args,parser,errorCB);
+	window.setInterval(batteryWatchDog.bind(undefined,cmd,args,parser,errorCB), REFRESH_INTERVAL); 
 
-
-	// Run C:\Windows\System32\netstat.exe -an
-	var batteryStatus = new runCommand(
-		command, args,
-		function (me, buffer) { me.stdout += buffer.toString() },
-		function () { 
-	    	Battery.getInstance().setLevel(bInfoParser(batteryStatus.stdout));
-	    }
-	);
 }
 
 
