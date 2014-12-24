@@ -5,9 +5,9 @@
 var Battery = (function() {
 
   // Common functions used for tweaking Battery elements.
-  function Battery(MAX_LEVEL, MIN_LEVEL) {
-  	this.MAX_LEVEL=MAX_LEVEL;
-  	this.MIN_LEVEL=MIN_LEVEL;
+  function Battery(limits) {
+  	this.MAX_LEVEL=limits.max;
+  	this.MIN_LEVEL=limits.min;
   }
 
   // Global instance.
@@ -40,9 +40,9 @@ var Battery = (function() {
     var batteryBox = document.getElementById('battery-level-box');
     var levelClass;
 
-    if (level > 65) {
+    if (level > this.MAX_LEVEL) {
       levelClass = 'high';
-    } else if (level > 30) {
+    } else if (level > this.MIN_LEVEL) {
       levelClass = 'medium';
     } else {
       levelClass = 'low';

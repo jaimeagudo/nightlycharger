@@ -2,8 +2,12 @@
 
 	var REFRESH_INTERVAL=1000; //milliseconds
 	var NOTIFICATIONS_SHOWTIME=1000; //milliseconds
-	var MIN_CHARGING_PERCENTAGE=40;
-	var MAX_CHARGING_PERCENTAGE=80;
+
+	var CHARGING_LIMITS={
+		max: 80,
+		min: 40,
+		minGap: 10
+	};
 
 	var Q = require("q");
 	var spawn = require('child_process').spawn;
@@ -32,12 +36,12 @@ function runCommand(cmd, args) {
 }
 
 window.onfocus = function() { 
-  console.log("focus");
+  // console.log("focus");
   // focusTitlebars(true);
 }
 
 window.onblur = function() { 
-  console.log("blur");
+  // console.log("blur");
   // focusTitlebars(false);
 }
 
@@ -56,7 +60,7 @@ function darwinBatteryParser(cmdOutput){
 	var matches;
 	var status={};
 
-	console.log("parsing darwin battery status");
+	// console.log("parsing darwin battery status");
 
 	matches=cmdOutput.match(batteryLevelRE);
 	if(matches && matches.length){
@@ -70,7 +74,7 @@ function darwinBatteryParser(cmdOutput){
 
 	matches=cmdOutput.match(remainingBatteryTimeRE);
 	if(matches && matches.length){
-		 console.log(matches[0]);
+		 // console.log(matches[0]);
 	   	//TODO		parseTime
 		// var batteryLevel=parseInt(matches[0]);
 		// if(isNaN(batteryLevel))
@@ -151,14 +155,14 @@ function showUnplugNotification(title,sticky){
 */
 function outlet(batStatus){
 
-	console.log(batStatus);
-	Battery.getInstance(MAX_CHARGING_PERCENTAGE,MIN_CHARGING_PERCENTAGE).setLevel(batStatus.batteryLevel);
+	// console.log(batStatus);
+	Battery.getInstance(CHARGING_LIMITS).setLevel(batStatus.batteryLevel);
 	if(batStatus.charging){
-		if(batStatus.batteryLevel > MAX_CHARGING_PERCENTAGE)
-			showUnplugNotification(MAX_CHARGING_PERCENTAGE + " battery level reached");
+		if(batStatus.batteryLevel > CHARGING_LIMITS.max)
+			showUnplugNotification(CHARGING_LIMITS.max + " battery level reached");
 	}else{
-		if(batStatus.batteryLevel < MIN_CHARGING_PERCENTAGE)
-			showPluginNotification(MIN_CHARGING_PERCENTAGE + " battery level reached");
+		if(batStatus.batteryLevel < CHARGING_LIMITS.min)
+			showPluginNotification(CHARGING_LIMITS.min + " battery level reached");
 	}
 	// batStatus.remainingBatteryTime;
 }
@@ -182,15 +186,37 @@ window.onload = function() {
 
 	//Globar vals EVIL
 	var maxL=document.getElementById('maximum-level');
-	maxL.value=MAX_CHARGING_PERCENTAGE;
+	//Initialize
+	maxL.value=CHARGING_LIMITS.max;
 	maxL.onchange = function() {
-		MAX_CHARGING_PERCENTAGE=parseInt(this.value, 10);
+		var newMax=parseInt(this.value, 10);
+		// console.log("newMax="+newMax +"CHARGING_LIMITS=" + JSON.stringify(CHARGING_LIMITS));
+		var safeMax=CHARGING_LIMITS.min + CHARGING_LIMITS.minGap
+		if(newMax > safeMax ){
+			CHARGING_LIMITS.max=newMax;
+		} else{
+			CHARGING_LIMITS.max=safeMax;
+			this.value=safeMax;
+			// console.log("******* gap violed set max=" + this.value);
+		}
 	};
 
 	var minL=document.getElementById('minimum-level');
-	minL.value=MIN_CHARGING_PERCENTAGE;
+	//Initialize
+	minL.value=CHARGING_LIMITS.min;
+	
 	minL.onchange = function() {
-		MIN_CHARGING_PERCENTAGE=parseInt(this.value, 10);
+
+		var newMin=parseInt(this.value, 10);
+		// console.log("newMin="+ newMin + "CHARGING_LIMITS=" +  JSON.stringify(CHARGING_LIMITS));
+		var safeMin=CHARGING_LIMITS.max - CHARGING_LIMITS.minGap;
+		if(newMin < safeMin){
+			CHARGING_LIMITS.min=newMin;
+		} else{			
+			CHARGING_LIMITS.min=safeMin;
+			this.value=safeMin;
+			// console.log("******* gap violed set min=" + safeMin);
+		}
 	};
 
 

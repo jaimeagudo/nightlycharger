@@ -1,7 +1,7 @@
 body {
   margin: 0;
   overflow: hidden;
-  height: 274px;
+  /*height: 274px;*/
 }
 
 #header {
@@ -20,15 +20,6 @@ body {
   vertical-align: top;
   display: inline-block;
   margin: 8px;
-}
-
-#adapter-status {
-  float: right;
-  margin-top: 2px;
-}
-
-#adapter-address {
-  font-weight: bold;
 }
 
 ul {
