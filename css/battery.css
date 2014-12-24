@@ -40,23 +40,7 @@ ul li {
   list-style-type: none;
 }
 
-#device-selection-div {
-  margin-top: 5px;
-}
 
-#device-selector {
-  background: transparent;
-  border: 1px solid #aaa;
-  color: #454545;
-  font-style: italic;
-}
-
-#discovery-toggle-button {
-  background: transparent;
-  border: 1px solid #aaa;
-  color: #454545;
-  font-style: italic;
-}
 
 hr {
   border: 0;
@@ -108,7 +92,7 @@ hr {
 .battery-tip {
   position: absolute;
   left: 97%;
-  background-color: black;
+  background-color: gray;
   width: 3%;
   height: 30%;
   top: 35%;

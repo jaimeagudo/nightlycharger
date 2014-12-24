@@ -8,17 +8,10 @@
 </head>
 <body>
   <div id="header">
-    <img src="bluetooth.png" alt="bluetooth icon">
+    <img src="imgs/ic_battery_alert_black_24dp.png" alt="battery icon">
     <h1>Nightly Charger prototype</h1>
-    <div id="adapter-status">
-
-      <ul>
-        <li><span id="adapter-name"></span></li>
-        <li><span id="adapter-address"></span></li>
-      </ul>
-    </div>
     <hr>
-    <div id="device-selection-div">
+    <div>
     	<label>
     		Minimum level:
     		<input id="minimum-level" type="range" min="0" max="100">
@@ -27,17 +20,6 @@
     		Maximum level:
     		<input id="maximum-level" type="range" min="0" max="100">
     	</label>
-<!-- 
-      Select device with Battery Service:
-      <select id="device-selector">
-        <option id="placeholder" value="" disabled selected>
-          No connected devices
-        </option>
-      </select>
-      <button type="button" id="discovery-toggle-button">
-        start discovery
-      </button>
- -->
 	</div>
   </div>
   <div id="no-devices-error">
@@ -49,6 +31,9 @@
       <div id="battery-level">-</div>
     </div>
     <div class="battery-tip"></div>
+
+   
+
   </div>
 </body>
 </html>
