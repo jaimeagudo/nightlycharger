@@ -60,15 +60,11 @@ function darwinBatteryParser(cmdOutput){
 
 	matches=cmdOutput.match(batteryLevelRE);
 	if(matches && matches.length){
-		batteryLevel=parseInt(matches[0]);
+		batteryLevel=parseInt(matches[0],10);
 		if(isNaN(batteryLevel))
 			console.log("Darwin script failed to figure out battery level")
 		else{
 			status.batteryLevel=batteryLevel;
-			// batteryLevel;
-			// var b= { batteryLevel: batteryLevel,
-			// 		 remainingBatteryTime: 100,
-			// 		 charging: true };
 		}
 	}
 
@@ -96,7 +92,7 @@ function ubuntuBatteryParser(cmdOutput){
 	var status={};
 
 	if(cmdOutput && cmdOutput.length){
-		var batteryLevel=parseInt(cmdOutput);
+		var batteryLevel=parseInt(cmdOutput,10);
 		if(isNaN(batteryLevel))
 			console.log("Ubuntu script failed to figure out battery level")
 		else
@@ -111,9 +107,9 @@ function ubuntuBatteryParser(cmdOutput){
 function showPluginNotification(title,sticky){
 
 
-	var notification = new Notification(title,{
-		icon: "http://reedimage.jpg",
-		body: "Please plug in the charger"
+	var notification = new Notification(title, {
+		icon: "imgs/flag-red.png",
+		body: "Battery discharging too deep, please plug in the charger"
 	});
 
 	// notification.onclick = function () {
@@ -134,11 +130,10 @@ function showPluginNotification(title,sticky){
 
 function showUnplugNotification(title,sticky){
 
-	var notification = new Notification(tittle,{
-		icon: "http://greenimage.jpg",
-		body: "Please unplug the charger"
+	var notification = new Notification(tittle, {
+		icon: "imgs/flag-green.png",
+		body: "Battery charged enough, please unplug the charger"
 	});
-	console.log("notif" );
 
 	notification.onshow = function () {
 	  // play sound on show
@@ -165,14 +160,7 @@ function outlet(batStatus){
 		if(batStatus.batteryLevel < MIN_CHARGING_PERCENTAGE)
 			showPluginNotification(MIN_CHARGING_PERCENTAGE + " battery level reached");
 	}
-
-// showUnplugNotification(MAX_CHARGING_PERCENTAGE + " battery level reached");
-
-
-
-
 	// batStatus.remainingBatteryTime;
-	// batStatus.charging;
 }
 
 
@@ -186,9 +174,25 @@ function batteryWatchDog(command,args,stdoutParser,errorCB){
 window.onload = function() {
   
 	//DEV TOFIX
-	require('nw.gui').Window.get().showDevTools();
+	// Load native UI library
+	var gui = require('nw.gui');
+	gui.Window.get().showDevTools();
+	gui.Window.get().show();
 
-	require("nw.gui").Window.get().show();
+
+	//Globar vals EVIL
+	var maxL=document.getElementById('maximum-level');
+	maxL.value=MAX_CHARGING_PERCENTAGE;
+	maxL.onchange = function() {
+		MAX_CHARGING_PERCENTAGE=parseInt(this.value, 10);
+	};
+
+	var minL=document.getElementById('minimum-level');
+	minL.value=MIN_CHARGING_PERCENTAGE;
+	minL.onchange = function() {
+		MIN_CHARGING_PERCENTAGE=parseInt(this.value, 10);
+	};
+
 
 
 	var cmd, args, parser;
@@ -218,24 +222,29 @@ window.onload = function() {
 			break;
 	};
 
+	var bindedWD=batteryWatchDog.bind(undefined,cmd,args,parser,errorCB);
+
 	//Start Polling battery status at defined period
-	batteryWatchDog(cmd,args,parser,errorCB);
-	window.setInterval(batteryWatchDog.bind(undefined,cmd,args,parser,errorCB), REFRESH_INTERVAL); 
+	bindedWD();
+	window.setInterval(bindedWD, REFRESH_INTERVAL); 
+//https://github.com/rogerwang/node-webkit/wiki/Icons
 
+// Create a tray icon
+//https://github.com/google/material-design-icons/tree/master/device
+	var tray = new gui.Tray({  icon: 'imgs/ic_battery_alert_black_24dp.png' });
+	tray.tooltip="Nighlty charger";
 
-
+// Give it a menu
+	var menu = new gui.Menu();
+	menu.append(new gui.MenuItem({ type: 'checkbox', label: 'About Nightly Charger' }));
+	menu.append(new gui.MenuItem({ type: 'separator'}));
+	menu.append(new gui.MenuItem({ type: 'checkbox', label: 'Preferences...' }));
+	//Silent notifications
+	//Run at login
+	//Levels
+	//Nightly-eco mode
+	menu.append(new gui.MenuItem({ type: 'separator'}));
+	menu.append(new gui.MenuItem({ type: 'checkbox', label: 'Quit' }));
+	tray.menu = menu;
 
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
