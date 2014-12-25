@@ -40,13 +40,43 @@ var Battery = (function() {
     var batteryBox = document.getElementById('battery-level-box');
     var levelClass;
 
-    if (level > this.MAX_LEVEL) {
-      levelClass = 'high';
-    } else if (level > this.MIN_LEVEL) {
-      levelClass = 'medium';
-    } else {
+    // if (level > this.MAX_LEVEL) {
+    //   levelClass = 'high';
+    // } else if (level > this.MIN_LEVEL) {
+    //   levelClass = 'medium';
+    // } else {
       levelClass = 'low';
-    }
+    // }
+
+    batteryBox.className = 'level ' + levelClass;
+    batteryBox.style.width = level + '%';
+  };
+
+
+  Battery.prototype.setMaxLevel = function(level) {
+
+	if(typeof level !== "number"){
+		this.hide();
+		return;
+	} else{
+		this.show();
+	}
+
+    var levelField = document.getElementById('battery-level-max');
+
+    levelField.innerHTML = '';
+    levelField.appendChild(document.createTextNode(level + ' %'));
+
+    var batteryBox = document.getElementById('battery-level-box-max');
+    var levelClass;
+
+    // if (level > this.MAX_LEVEL) {
+      levelClass = 'high';
+    // } else if (level > this.MIN_LEVEL) {
+    //   levelClass = 'medium';
+    // } else {
+    //   levelClass = 'low';
+    // }
 
     batteryBox.className = 'level ' + levelClass;
     batteryBox.style.width = level + '%';

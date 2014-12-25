@@ -78,6 +78,7 @@ hr {
 
 .battery .level.low {
   background-color: red;
+  z-index: 100;
 }
 
 .battery-tip {

@@ -156,7 +156,7 @@ function showUnplugNotification(title,sticky){
 function outlet(batStatus){
 
 	// console.log(batStatus);
-	Battery.getInstance(CHARGING_LIMITS).setLevel(batStatus.batteryLevel);
+	// Battery.getInstance(CHARGING_LIMITS).setLevel(batStatus.batteryLevel);
 	if(batStatus.charging){
 		if(batStatus.batteryLevel > CHARGING_LIMITS.max)
 			showUnplugNotification(CHARGING_LIMITS.max + " battery level reached");
@@ -199,12 +199,14 @@ window.onload = function() {
 			this.value=safeMax;
 			// console.log("******* gap violed set max=" + this.value);
 		}
+
+
+		Battery.getInstance(CHARGING_LIMITS).setMaxLevel(CHARGING_LIMITS.max);
 	};
 
 	var minL=document.getElementById('minimum-level');
 	//Initialize
 	minL.value=CHARGING_LIMITS.min;
-	
 	minL.onchange = function() {
 
 		var newMin=parseInt(this.value, 10);
@@ -217,8 +219,9 @@ window.onload = function() {
 			this.value=safeMin;
 			// console.log("******* gap violed set min=" + safeMin);
 		}
-	};
+		Battery.getInstance(CHARGING_LIMITS).setLevel(CHARGING_LIMITS.min);
 
+	};
 
 
 	var cmd, args, parser;
