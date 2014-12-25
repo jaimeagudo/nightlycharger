@@ -197,7 +197,6 @@ window.onload = function() {
 		} else{
 			CHARGING_LIMITS.max=safeMax;
 			this.value=safeMax;
-			// console.log("******* gap violed set max=" + this.value);
 		}
 
 
@@ -217,9 +216,8 @@ window.onload = function() {
 		} else{			
 			CHARGING_LIMITS.min=safeMin;
 			this.value=safeMin;
-			// console.log("******* gap violed set min=" + safeMin);
 		}
-		Battery.getInstance(CHARGING_LIMITS).setLevel(CHARGING_LIMITS.min);
+		Battery.getInstance(CHARGING_LIMITS).setMinLevel(CHARGING_LIMITS.min);
 
 	};
 

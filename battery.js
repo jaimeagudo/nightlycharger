@@ -23,7 +23,7 @@ var Battery = (function() {
     document.getElementById('info-div').hidden = true;
   };
 
-  Battery.prototype.setLevel = function(level) {
+  Battery.prototype.setMinLevel = function(level) {
 
 	if(typeof level !== "number"){
 		this.hide();
@@ -32,12 +32,12 @@ var Battery = (function() {
 		this.show();
 	}
 
-    var levelField = document.getElementById('battery-level');
+    var levelField = document.getElementById('battery-level-min');
 
     levelField.innerHTML = '';
     levelField.appendChild(document.createTextNode(level + ' %'));
 
-    var batteryBox = document.getElementById('battery-level-box');
+    var batteryBox = document.getElementById('battery-level-box-min');
     var levelClass;
 
     // if (level > this.MAX_LEVEL) {
@@ -45,7 +45,7 @@ var Battery = (function() {
     // } else if (level > this.MIN_LEVEL) {
     //   levelClass = 'medium';
     // } else {
-      levelClass = 'low';
+      levelClass = 'medium';
     // }
 
     batteryBox.className = 'level ' + levelClass;
