@@ -1,95 +1,158 @@
+
+// LOW LEVEL
 // github.com/jaimeagudo
 // Extracted from https://github.com/GoogleChrome/chrome-app-samples
 // Apache License Version 2.0, January 2004 http://www.apache.org/licenses/
 
 var Battery = (function() {
 
-  // Common functions used for tweaking Battery elements.
-  function Battery(limits) {
-  	this.MAX_LEVEL=limits.max;
-  	this.MIN_LEVEL=limits.min;
-  }
+	var instance;
+	var spawn = require('child_process').spawn;
+	var Q = require("q");
 
-  // Global instance.
-  var instance;
+	function Battery(batStatusListener, refreshInterval){
 
-   Battery.prototype.show = function(){
-   	document.getElementById('no-devices-error').hidden = true;
-    document.getElementById('info-div').hidden = false;
-   }
+		this.batStatusListener=batStatusListener;
 
-  Battery.prototype.hide = function(b) {
-    document.getElementById('no-devices-error').hidden = false;
-    document.getElementById('info-div').hidden = true;
-  };
+		//Setup custom battery script and parser based on the running OS
+		switch(process.platform){ 
+			case "win32": 
+			//http://www.robvanderwoude.com/files/battstat_xp.txt
+			//http://blogs.technet.com/b/heyscriptingguy/archive/2013/05/01/powertip-use-powershell-to-show-remaining-battery-time.aspx
+			//		(Get-WmiObject win32_battery).estimatedChargeRemaining
+			case "darwin": 
+				this.command="pmset";              
+				this.args=["-g", "batt"];       
+				this.parser=Battery.darwinParser;  
+				break;
+			default:
+				break;
+			case 'sunos' :
+			case "freebsd":
+			case "linux":
+				this.command="upower -i $(upower -e | grep BAT) | grep --color=never -E percentage|xargs|cut -d' ' -f2|sed s/%//"
+				this.args=null;
+				this.parser=Battery.ubuntuParser;
+				break;
+		};
+		if(this.command){
+			this.check();
+			//Start Polling battery status at defined period
+			//this has a wrong value on the intervaled function, pass it
+			setInterval(this.check, refreshInterval, this); 
+		}else{
+			Battery.errorCB("Non compatible with "+  process.platform + ", cannot figure out battery status");
+		}
 
-  Battery.prototype.setMinLevel = function(level) {
-
-	if(typeof level !== "number"){
-		this.hide();
-		return;
-	} else{
-		this.show();
 	}
 
-    var levelField = document.getElementById('battery-level-min');
 
-    levelField.innerHTML = '';
-    levelField.appendChild(document.createTextNode(level + ' %'));
+	
+	Battery.prototype.check = function(a){
+		a= a || this;
 
-    var batteryBox = document.getElementById('battery-level-box-min');
-    var levelClass;
+		Battery.runCommand(a.command, a.args)
+		.then(a.parser,Battery.errorCB)
+		.then(a.batStatusListener,Battery.errorCB);
+	};
 
-    // if (level > this.MAX_LEVEL) {
-    //   levelClass = 'high';
-    // } else if (level > this.MIN_LEVEL) {
-    //   levelClass = 'medium';
-    // } else {
-      levelClass = 'medium';
-    // }
-
-    batteryBox.className = 'level ' + levelClass;
-    batteryBox.style.width = level + '%';
-  };
+	Battery.errorCB = function(e){
+		console.log("** Error=" + e);
+		throw e;
+	};
 
 
-  Battery.prototype.setMaxLevel = function(level) {
+	Battery.runCommand = function(cmd, args) {
+		var deferred = Q.defer();
+		console.log("cmd="+cmd +"args="+args);
+		var child = spawn(cmd, args);
 
-	if(typeof level !== "number"){
-		this.hide();
-		return;
-	} else{
-		this.show();
-	}
+		child.stdout.on('data', function (buffer) { 
+			child.stdout += buffer.toString();
+			deferred.notify();
+		});
 
-    var levelField = document.getElementById('battery-level-max');
+		child.stdout.on('end',function(){
+			deferred.resolve(child.stdout);
+		});
 
-    levelField.innerHTML = '';
-    levelField.appendChild(document.createTextNode(level + ' %'));
+		child.stderr.on('data', function (data) {
+			console.log('stderr: ' + data);
+			deferred.reject(new Error("stdeerr: " + data));  
+		});
 
-    var batteryBox = document.getElementById('battery-level-box-max');
-    var levelClass;
+		return deferred.promise;
+	};
 
-    // if (level > this.MAX_LEVEL) {
-      levelClass = 'high';
-    // } else if (level > this.MIN_LEVEL) {
-    //   levelClass = 'medium';
-    // } else {
-    //   levelClass = 'low';
-    // }
 
-    batteryBox.className = 'level ' + levelClass;
-    batteryBox.style.width = level + '%';
-  };
 
-  return {
-    getInstance: function() {
-      if (!instance) {
-        instance = new Battery(arguments);
-      }
+	Battery.darwinParser = function(cmdOutput){
 
-      return instance;
-    }
-  };
+		var batteryLevelRE=/[0-9][0-9]?[0-9]?(?=%;)/
+		var remainingBatteryTimeRE=/[0-9][0-9]?:[0-9][0-9]?(?= remaining)/i
+		var dischargingRE=/discharging/i
+
+		var batteryLevel;
+		var matches;
+		var status={};
+
+		// console.log("parsing darwin battery status");
+
+		matches=cmdOutput.match(batteryLevelRE);
+		if(matches && matches.length){
+			batteryLevel=parseInt(matches[0],10);
+			if(isNaN(batteryLevel))
+				console.log("Darwin script failed to figure out battery level")
+			else{
+				status.batteryLevel=batteryLevel;
+			}
+		}
+
+		matches=cmdOutput.match(remainingBatteryTimeRE);
+		if(matches && matches.length){
+			 // console.log(matches[0]);
+		   	//TODO		parseTime
+			// var batteryLevel=parseInt(matches[0]);
+			// if(isNaN(batteryLevel))
+				// console.log("Darwin script failed to figure out battery remaining time")
+			// else{
+				status.remainingBatteryTime=matches[0];
+
+			// }
+		}
+
+		matches=cmdOutput.match(dischargingRE);
+		status.charging=! (matches && matches.length && (typeof matches[0] == "string"));
+		// console.log(JSON.stringify(status));
+		return status;
+	};
+
+
+	Battery.ubuntuParser = function(cmdOutput){
+		var status={};
+
+		if(cmdOutput && cmdOutput.length){
+			var batteryLevel=parseInt(cmdOutput,10);
+			if(isNaN(batteryLevel))
+				console.log("Ubuntu script failed to figure out battery level")
+			else
+				return { 
+					batteryLevel: batteryLevel,
+					remainingBatteryTime: 100,
+					charging: false 
+				};
+		}
+		return status;
+	};
+
+	return {
+		getInstance: function(cL,rI) {
+			if (!instance) {
+				instance = new Battery(cL,rI);
+			}
+
+			return instance;
+		}
+	};
 
 })();

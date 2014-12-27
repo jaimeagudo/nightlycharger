@@ -1,6 +1,7 @@
 body {
   margin: 0;
   overflow: hidden;
+  font-family: 'DejaVu Sans Light', Verdana, sans-serif;
   /*height: 274px;*/
 }
 
@@ -15,7 +16,7 @@ body {
 }
 
 #header h1 {
-  font-family: 'DejaVu Sans Light', Verdana, sans-serif;
+  /*font-family: 'DejaVu Sans Light', Verdana, sans-serif;*/
   font-weight: normal;
   vertical-align: top;
   display: inline-block;
@@ -31,13 +32,16 @@ ul li {
   list-style-type: none;
 }
 
-
-
 hr {
   border: 0;
   height: 0;
   border-top: 1px solid rgba(0,0,0,0.12);
   border-bottom: 1px solid rgba(255,255,255,0.3);
+}
+
+label {
+  text-align: center;
+  margin: auto; 
 }
 
 #no-devices-error {
@@ -67,20 +71,20 @@ hr {
   height: 100%;
 }
 
-.battery .level.high {
+.battery .level.max {
   background-color: green;
 }
 
-.battery .level.medium {
+.battery .level.min {
   background-color: orange;
   z-index: 5;
 }
-
+/*
 .battery .level.low {
   background-color: red;
   z-index: 5;
 }
-
+*/
 .battery-tip {
   position: absolute;
   left: 97%;

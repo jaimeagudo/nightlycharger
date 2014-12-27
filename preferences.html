@@ -3,45 +3,45 @@
 <head>
   <title>Nightly Charger - Preferences</title>
   <link rel="stylesheet" type="text/css" href="css/battery.css">
+  <script src="batteryControl.js"></script>
   <script src="battery.js"></script>
   <script src="main.js"></script>
 </head>
 <body>
-  <div id="header">
+	<div id="header">
 <!--     <img src="imgs/ic_battery_alert_black_24dp.png" alt="battery icon">
-    <h1>Nightly Charger prototype</h1> -->
-
-  </div>
-  <hr>
-  <div id="no-devices-error">
-    No battery found
-  </div>
-  <div>
-  <div>
-  	<label>
-  		Maximum level
-  	</label>
-  	</div>
-  	<input id="maximum-level" type="range" min="0" max="100">
-  </div>
-
-  <div id="info-div">
-  	<div class="battery">
-      <div id="battery-level-box-min" class="level"></div>
-      <div id="battery-level-box-max" class="level"></div>
-      <div id="battery-level-min">-</div>
-      <div id="battery-level-max">-</div>
-    </div>
-    <div class="battery-tip"></div>
-  </div>
- <div>
- 	<input id="minimum-level" type="range" min="0" max="100">
- 	<div>
-	 	<label>
-	  		Minimum level
-	  	</label>
-  	</div>
-
- </div>
+	<h1>Nightly Charger prototype</h1> -->
+	</div>
+<hr>
+<div id"line">
+	<div id="no-devices-error">
+		No battery found
+	</div>
+	<div>
+		<div class="label">
+			<label>
+				Maximum level
+			</label>
+		</div>
+		<input id="maximum-level" type="range" min="0" max="100">
+	</div>
+	<div id="info-div">
+		<div class="battery">
+			<div id="battery-level-box-min" class="level"></div>
+			<div id="battery-level-box-max" class="level"></div>
+			<div id="battery-level-min">-</div>
+			<div id="battery-level-max">-</div>
+		</div>
+		<div class="battery-tip"></div>
+	</div>
+	<div>
+		<input id="minimum-level" type="range" min="0" max="100">
+		<div class="label">
+			<label>
+				Minimum level
+			</label>
+		</div>
+	</div>
+</div>
 </body>
 </html>
