@@ -64,7 +64,7 @@ function showUnplugNotification(title,sticky){
 */
 function checkLevels(batStatus){
 
-	console.log("checkLevels"+batStatus);
+	console.log("checkLevels"+JSON.stringify(batStatus));
 	if(batStatus.charging){
 		if(batStatus.batteryLevel > CHARGING_LIMITS.max)
 			showUnplugNotification( CHARGING_LIMITS.max + " battery level reached");
@@ -129,10 +129,10 @@ window.onload = function() {
 	//Show the nice battery graphical control
 	BatteryControl.getInstance(CHARGING_LIMITS);
 	try {
-	   // Setup low-level battery watchdog
-	   Battery.getInstance(checkLevels,REFRESH_INTERVAL);
+	    // Setup low-level battery watchdog
+	    Battery.getInstance(checkLevels,REFRESH_INTERVAL);
 	} catch (e) {
-	    alert(e);
+		alert(e);
 	    gui.App.quit();
 	}
 }

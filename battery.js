@@ -7,8 +7,13 @@
 var Battery = (function() {
 
 	var instance;
+
 	var spawn = require('child_process').spawn;
 	var Q = require("q");
+	var moment = require('moment');
+	moment().local();
+	moment().zone("+01:00");
+
 
 	function Battery(batStatusListener, refreshInterval){
 
@@ -64,7 +69,6 @@ var Battery = (function() {
 
 	Battery.runCommand = function(cmd, args) {
 		var deferred = Q.defer();
-		console.log("cmd="+cmd +"args="+args);
 		var child = spawn(cmd, args);
 
 		child.stdout.on('data', function (buffer) { 
@@ -110,14 +114,15 @@ var Battery = (function() {
 
 		matches=cmdOutput.match(remainingBatteryTimeRE);
 		if(matches && matches.length){
-			 // console.log(matches[0]);
+			var remaining=moment(matches[0],"HH:mm");
+			console.log("local="+remaining.local().toString());
+			// console.log(matches[0]);
 		   	//TODO		parseTime
 			// var batteryLevel=parseInt(matches[0]);
 			// if(isNaN(batteryLevel))
 				// console.log("Darwin script failed to figure out battery remaining time")
 			// else{
-				status.remainingBatteryTime=matches[0];
-
+			status.remainingBatteryTime = remaining.isValid() ? remaining : 0;
 			// }
 		}
 
