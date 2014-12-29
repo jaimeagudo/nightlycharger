@@ -11,8 +11,7 @@ var Battery = (function() {
 	var spawn = require('child_process').spawn;
 	var Q = require("q");
 	var moment = require('moment');
-	moment().local();
-	moment().zone("+01:00");
+
 
 
 	function Battery(batStatusListener, refreshInterval){
@@ -101,7 +100,6 @@ var Battery = (function() {
 		var status={};
 
 		// console.log("parsing darwin battery status");
-
 		matches=cmdOutput.match(batteryLevelRE);
 		if(matches && matches.length){
 			batteryLevel=parseInt(matches[0],10);
@@ -114,16 +112,7 @@ var Battery = (function() {
 
 		matches=cmdOutput.match(remainingBatteryTimeRE);
 		if(matches && matches.length){
-			var remaining=moment(matches[0],"HH:mm");
-			console.log("local="+remaining.local().toString());
-			// console.log(matches[0]);
-		   	//TODO		parseTime
-			// var batteryLevel=parseInt(matches[0]);
-			// if(isNaN(batteryLevel))
-				// console.log("Darwin script failed to figure out battery remaining time")
-			// else{
-			status.remainingBatteryTime = remaining.isValid() ? remaining : 0;
-			// }
+			status.remainingBatteryTime=moment.duration(matches[0]);
 		}
 
 		matches=cmdOutput.match(dischargingRE);
