@@ -46,7 +46,6 @@ var Battery = (function() {
 
 	}
 
-
 	
 	Battery.prototype.check = function(a){
 		a= a || this;

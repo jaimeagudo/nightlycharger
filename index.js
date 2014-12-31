@@ -14,6 +14,10 @@ global.vars={
 		minGap: 10
 	},
 	CHEAP_MODE : false,
+	NOTIFICATIONS_SHOWN: {
+		plugin: false,
+		unplug: false
+	}
 };
 
 function setRunAtLogin() {
@@ -87,11 +91,19 @@ function checkLevels(batStatus){
 	}else{
 		//80-40% mode
 		if(batStatus.charging){
-			if(batStatus.batteryLevel > global.vars.CHARGING_LIMITS.max)
-				showUnplugNotification( global.vars.CHARGING_LIMITS.max + " battery level reached");
+			if(batStatus.batteryLevel > global.vars.CHARGING_LIMITS.max &&
+				! global.vars.NOTIFICATIONS_SHOWN.unplug){
+				global.vars.NOTIFICATIONS_SHOWN.plugin=false;
+				global.vars.NOTIFICATIONS_SHOWN.unplug=true;
+				showUnplugNotification(global.vars.CHARGING_LIMITS.max + " battery level reached");
+			}
 		}else{
-			if(batStatus.batteryLevel < global.vars.CHARGING_LIMITS.min)
-				showPluginNotification( global.vars.CHARGING_LIMITS.min + " battery level reached");
+			if(batStatus.batteryLevel < global.vars.CHARGING_LIMITS.min &&
+				! global.vars.NOTIFICATIONS_SHOWN.plugin) {
+				global.vars.NOTIFICATIONS_SHOWN.plugin=true;
+				global.vars.NOTIFICATIONS_SHOWN.unplug=false;
+				showPluginNotification(global.vars.CHARGING_LIMITS.min + " battery level reached");
+			}
 		}
 	}
 	
