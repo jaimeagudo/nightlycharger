@@ -1,5 +1,8 @@
-// github.com/jaimeagudo
-// Extracted from https://github.com/GoogleChrome/chrome-app-samples
+// Nightly Charger, http://github.com/jaimeagudo/nightlycharger
+// Copyright (C) 2014 Jaime Agudo López
+// GNU GPL v2
+
+// Work derived from https://github.com/GoogleChrome/chrome-app-samples
 // Apache License Version 2.0, January 2004 http://www.apache.org/licenses/
 
 var BatteryControl = (function() {
@@ -12,6 +15,8 @@ var BatteryControl = (function() {
 
   	var that=this;
   	this.limits=limits;
+  	this.minListener=minListener;
+  	this.maxListener=maxListener;
 
    	//Globar vals EVIL
 	var maxL=document.getElementById('maximum-level');
@@ -28,6 +33,7 @@ var BatteryControl = (function() {
 		}
 
 		that.setLevel("max");
+		this.maxListener(that.limits.max);
 	};
 	var minL=document.getElementById('minimum-level');
 	//Initialize
@@ -45,6 +51,7 @@ var BatteryControl = (function() {
 		}
 
 		that.setLevel("min");
+		this.minListener(that.limits.min);
 	};
 
   	that.setLevel("min");
@@ -59,10 +66,10 @@ var BatteryControl = (function() {
   BatteryControl.prototype.setLevel = function(way) {
   	var level = way === "max" ? this.limits.max : this.limits.min;
 
-	if(typeof level !== "number"){
-		this.visible(false);
-		return;
-	}
+	// if(typeof level !== "number"){
+	// 	this.visible(false);
+	// 	return;
+	// }
 	this.visible(true);
 
     var levelField = document.getElementById('battery-level-' + way);
@@ -74,10 +81,14 @@ var BatteryControl = (function() {
     batteryBox.style.width = level + '%';
   };
 
+  BatteryControl.prototype.getLimits = function(){
+  	return this.limits;
+  };
+
   return {
-    getInstance: function(limits) {
+    getInstance: function(limits,minListener,maxListener) {
       if (!instance) {
-        instance = new BatteryControl(limits);
+        instance = new BatteryControl(limits,minListener,maxListener);
       }
 
       return instance;

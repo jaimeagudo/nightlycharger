@@ -1,8 +1,6 @@
-
-// LOW LEVEL
-// github.com/jaimeagudo
-// Extracted from https://github.com/GoogleChrome/chrome-app-samples
-// Apache License Version 2.0, January 2004 http://www.apache.org/licenses/
+// Nightly Charger, http://github.com/jaimeagudo/nightlycharger
+// Copyright (C) 2014 Jaime Agudo López
+// GNU GPL v2
 
 var Battery = (function() {
 
@@ -11,8 +9,6 @@ var Battery = (function() {
 	var spawn = require('child_process').spawn;
 	var Q = require("q");
 	var moment = require('moment');
-
-
 
 	function Battery(batStatusListener, refreshInterval){
 
@@ -43,7 +39,7 @@ var Battery = (function() {
 			this.check();
 			//Start Polling battery status at defined period
 			//this has a wrong value on the intervaled function, pass it
-			setInterval(this.check, refreshInterval, this); 
+			this.timer=setInterval(this.check, refreshInterval, this); 
 		}else{
 			Battery.errorCB("Non compatible with "+  process.platform + ", cannot figure out battery status");
 		}
@@ -121,6 +117,10 @@ var Battery = (function() {
 		return status;
 	};
 
+	Battery.prototype.delete = function(){
+		this.timer && clearInterval(this.timer);	
+		this.instance=null;
+	};
 
 	Battery.ubuntuParser = function(cmdOutput){
 		var status={};

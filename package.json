@@ -2,7 +2,7 @@
   "name": "nightly-charger",
   "version": "0.0.1",
   "description": "A tray system tool to prolong your battery life (  see http://batteryuniversity.com/learn/article/how_to_prolong_lithium_based_batteries)    and save on your energy bill remind you when is cheaper to charge your laptop.",
-  "main": "preferences.html",
+  "main": "index.html",
   "dependencies": {
     "moment": "^2.8.4",
     "q": "1.1.2"

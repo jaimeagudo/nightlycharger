@@ -6,15 +6,9 @@
 
 window.onload = function() {
   
-	//DEV TOFIX
 	// Load native UI library
 	var gui = require('nw.gui');
-    
 	// gui.Window.get().showDevTools();
-
-
-	// gui.Window.get().show();
-
 
 	var fs = require("fs");
 	fs.readFile("LICENSE", function (err, data) {
@@ -22,5 +16,4 @@ window.onload = function() {
 		var licenseTA=document.getElementById("license");
 		licenseTA.value=data;
 	});
-
 }
