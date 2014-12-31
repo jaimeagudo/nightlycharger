@@ -82,11 +82,21 @@ function checkLevels(batStatus){
 		var leavingTime=moment("2182-05-04T00:00:00");
 
 		if(batStatus.charging) {
-			if( batteryDied.isAfter(cheapPeriodStart) || batteryDied.isAfter(leavingTime))
+			if((batteryDied.isAfter(cheapPeriodStart) ||
+			   batteryDied.isAfter(leavingTime)) && 
+			  ! global.vars.NOTIFICATIONS_SHOWN.unplugEco){
+				global.vars.NOTIFICATIONS_SHOWN.unplugEco=true;
+				global.vars.NOTIFICATIONS_SHOWN.pluginEco=false;
 				showUnplugNotification( "Battery enough till " + cheapPeriodStart.format("hm"));
+			}
 		} else { //Discharging battery
-			if(batteryDied.isBefore(cheapPeriodStart))
+			if((batteryDied.isBefore(cheapPeriodStart) ||
+			   batteryDied.isBefore(leavingTime)) && 
+			  ! global.vars.NOTIFICATIONS_SHOWN.pluginEco) {
+				global.vars.NOTIFICATIONS_SHOWN.pluginEco=true;
+				global.vars.NOTIFICATIONS_SHOWN.unplugEco=false;
 				showPluginNotification( "Battery won't last till " + cheapPeriodStart.format("hm"));
+			}
 		}
 	}else{
 		//80-40% mode
