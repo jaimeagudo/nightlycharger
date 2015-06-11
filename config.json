@@ -1,0 +1,17 @@
+{
+	"notifications" :{
+		"silent": false,
+		"sticky": false,
+		"showTimeMs": 10000
+
+	},
+	"monitor": {
+		"intervalMs" : 10000,
+		"limits" : {
+			"max" : 80,
+			"min" : 40,
+			"minGap" : 10
+		},
+		"cheapMode" : false
+	}
+}

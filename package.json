@@ -5,11 +5,12 @@
   "main": "index.html",
   "dependencies": {
     "moment": "^2.8.4",
-    "q": "1.1.2"
+    "q": "1.1.2",
+    "underscore" : "^1.8.0"
   },
   "window": {
     "show": false,
-    "toolbar": false,
+    "toolbar": true,
     "frame": true,
     "position": "center",
     "width": 200,

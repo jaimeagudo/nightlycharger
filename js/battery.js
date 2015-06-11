@@ -7,12 +7,13 @@ var Battery = (function() {
 	var instance;
 
 	var spawn = require('child_process').spawn;
-	var Q = require("q");
+	var Q = require('q');
 	var moment = require('moment');
+	var _ = require('underscore');
 
-	function Battery(batStatusListener, refreshInterval){
+	function Battery(){
 
-		this.batStatusListener=batStatusListener;
+		// this.batStatusListener=batStatusListener;
 
 		//Setup custom battery script and parser based on the running OS
 		switch(process.platform){ 
@@ -35,25 +36,46 @@ var Battery = (function() {
 				this.parser=Battery.ubuntuParser;
 				break;
 		};
-		if(this.command){
-			this.check();
-			//Start Polling battery status at defined period
-			//this has a wrong value on the intervaled function, pass it
-			this.timer=setInterval(this.check, refreshInterval, this); 
-		}else{
+
+		if(! this.command){
 			Battery.errorCB("Non compatible with "+  process.platform + ", cannot figure out battery status");
 		}
 
 	}
+	Battery.prototype.status={};
 
-	
+	Battery.prototype.batStatusListener=function(){}
+
+	Battery.prototype.setAutoCheck = function(batStatusListener,refreshIntervalMs){
+		//Start Polling battery status at defined period
+		//this has a wrong value on the intervaled function, pass it
+		console.log("autocheck");
+		this.batStatusListener=batStatusListener;
+		this.check=_.bind(this.check,this);
+		this.check();
+		this.timer=setInterval(this.check, refreshIntervalMs, this); 
+	};
+
+
+	//Returns a promise on the status check 
 	Battery.prototype.check = function(a){
 		a= a || this;
+		console.log("checking");
 
-		Battery.runCommand(a.command, a.args)
-		.then(a.parser,Battery.errorCB)
-		.then(a.batStatusListener,Battery.errorCB);
+		this.status=Battery.runCommand(a.command, a.args)
+			.then(a.parser,Battery.errorCB)
+			.then(this.batStatusListener,Battery.errorCB);
+
+//		return this.status;
+		// .then(a.batStatusListener,Battery.errorCB);
 	};
+
+	Battery.prototype.delete = function(){
+		this.timer && clearInterval(this.timer);
+		this.status = {};
+		this.instance = null;
+	};
+
 
 	Battery.errorCB = function(e){
 		console.log("** Error=" + e);
@@ -93,7 +115,6 @@ var Battery = (function() {
 		var batteryLevel;
 		var matches;
 		var status={};
-
 		// console.log("parsing darwin battery status");
 		matches=cmdOutput.match(batteryLevelRE);
 		if(matches && matches.length){
@@ -112,14 +133,11 @@ var Battery = (function() {
 
 		matches=cmdOutput.match(dischargingRE);
 		status.charging=! (matches && matches.length && (typeof matches[0] == "string"));
-		// console.log(JSON.stringify(status));
+		console.log(JSON.stringify(status));
 		return status;
 	};
 
-	Battery.prototype.delete = function(){
-		this.timer && clearInterval(this.timer);	
-		this.instance=null;
-	};
+
 
 	Battery.ubuntuParser = function(cmdOutput){
 		var status={};
@@ -139,11 +157,10 @@ var Battery = (function() {
 	};
 
 	return {
-		getInstance: function(cL,rI) {
+		getInstance: function(){
 			if (!instance) {
-				instance = new Battery(cL,rI);
+				instance = new Battery();
 			}
-
 			return instance;
 		}
 	};

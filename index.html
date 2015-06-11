@@ -1,10 +1,25 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <script src="battery.js"></script>
-  <script src="index.js"></script>
-  <script src="batteryControl.js"></script>
+  <script src="js/battery.js"></script>
+  <script src="js/index.js"></script>
 </head>
 <body>    
+<script>
+  var path = './';
+  var fs = require('fs');
+ 
+  fs.watch(path, { recursive: true }, function() {
+    if (location)
+      location.reload();
+  });
+
+  for(module in global.require.cache){
+    if(global.require.cache.hasOwnProperty(module)){
+        delete global.require.cache[module];
+    }
+}
+
+</script>
 </body>
 </html>

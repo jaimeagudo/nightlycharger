@@ -8,12 +8,13 @@ window.onload = function() {
   
 	// Load native UI library
 	var gui = require('nw.gui');
-	// gui.Window.get().showDevTools();
-
+	window.gui=gui;
 	var fs = require("fs");
+
 	fs.readFile("LICENSE", function (err, data) {
 		if (err) throw err;       
 		var licenseTA=document.getElementById("license");
 		licenseTA.value=data;
 	});
+//	console.log("loading about.js")
 }

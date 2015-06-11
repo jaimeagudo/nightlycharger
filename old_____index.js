@@ -4,20 +4,26 @@
 
 "use strict";
 
-global.vars={
-	REFRESH_INTERVAL : 1000, //milliseconds
-	NOTIFICATIONS_SHOWTIME : 1000, //milliseconds
-	SILENT_NOTIFICATIONS : false,
-	CHARGING_LIMITS : {
-		max: 80,
-		min: 40,
-		minGap: 10
+global.VARS={
+	battery: {
+		refreshInterval : 1000.
+		chargingLimits : {
+			max: 80,
+			min: 40,
+			minGap: 10
+		},
 	},
-	CHEAP_MODE : false,
-	NOTIFICATIONS_SHOWN: {
-		plugin: false,
-		unplug: false
-	}
+	notifications : {
+		showTime: 1000,
+		silent: true,
+		shown: {
+			plugin: false,
+			unplug: false,
+			pluginEco: false,
+			unplugEco: false
+		}
+	},
+	cheapMode: false,
 };
 
 function setRunAtLogin() {
@@ -27,26 +33,27 @@ function setRunAtLogin() {
 
 function onShowNotif(){
 
-	// play sound on show
-	if(!global.vars.SILENT_NOTIFICATIONS){
-		// myAud=document.getElementById("notifAudio");
-		// myAud.play();
-	}
+	// // play sound on show
+	// if(! global.VARS.notifications.silent){
+	// 	// myAud=document.getElementById("notifAudio");
+	// 	// myAud.play();
+	// }
 
-    // auto close after NOTIFICATIONS_SHOWTIME
-    if (!sticky)
-    	setTimeout(function() {notification.close();}, global.vars.NOTIFICATIONS_SHOWTIME);
+    // auto close after NOTIFICATIONS_SHOWTIME   
 }
 
 
-function showPluginNotification(title,sticky) {
+function showPluginNotification(title) {
 
 	var notification = new Notification(title, {
 		icon: "imgs/flag-red.png",
 		body: "Battery discharging too deep, please plug in the charger"
 	});
 
-	notification.onshow = onShowNotif.bind(this,title,sticky);
+	notification.onshow = function(){
+		if (! global.VARS.notifications.showTime > 0)
+			setTimeout(function() {notification.close();}, global.VARS.notifications.showTime);
+	}
 }
 
 
@@ -57,18 +64,23 @@ function showUnplugNotification(title,sticky){
 		body: "Battery charged enough, please unplug the charger"
 	});
 
-	notification.onshow = onShowNotif.bind(this,title,sticky);
+	notification.onshow = function(){
+		if (! global.VARS.notifications.showTime > 0)
+			setTimeout(function() {notification.close();}, global.VARS.notifications.showTime);
+	}
 }
 
 /**
  * Updates UI 
  */
-function checkLevels(batStatus){
+ function checkLevels(){
+
+ 	batStatus=this.batteryMonitor.getStatus();
 
 //	console.log("checkLevels"+JSON.stringify(batStatus));
-	if(global.vars.CHEAP_MODE || leavingTime){
-		var now = moment();
-		var cheapPeriodEnd, cheapPeriodStart;
+if(global.VARS.cheapMode || leavingTime){
+	var now = moment();
+	var cheapPeriodEnd, cheapPeriodStart;
 
 		if(now.isDSTS()){                //true during summer
 			cheapPeriodStart=moment({ hour : 23 });
@@ -83,48 +95,55 @@ function checkLevels(batStatus){
 
 		if(batStatus.charging) {
 			if((batteryDied.isAfter(cheapPeriodStart) ||
-			   batteryDied.isAfter(leavingTime)) && 
-			  ! global.vars.NOTIFICATIONS_SHOWN.unplugEco){
-				global.vars.NOTIFICATIONS_SHOWN.unplugEco=true;
-				global.vars.NOTIFICATIONS_SHOWN.pluginEco=false;
-				showUnplugNotification( "Battery enough till " + cheapPeriodStart.format("hm"));
-			}
+				batteryDied.isAfter(leavingTime)) && 
+				! global.VARS.notifications.shown.unplugEco){
+				global.VARS.notifications.shown.unplugEco=true;
+			global.VARS.notifications.shown.pluginEco=false;
+			showUnplugNotification( "Battery enough till " + cheapPeriodStart.format("hm"));
+		}
 		} else { //Discharging battery
 			if((batteryDied.isBefore(cheapPeriodStart) ||
-			   batteryDied.isBefore(leavingTime)) && 
-			  ! global.vars.NOTIFICATIONS_SHOWN.pluginEco) {
-				global.vars.NOTIFICATIONS_SHOWN.pluginEco=true;
-				global.vars.NOTIFICATIONS_SHOWN.unplugEco=false;
-				showPluginNotification( "Battery won't last till " + cheapPeriodStart.format("hm"));
-			}
-		}
-	}else{
-		//80-40% mode
-		if(batStatus.charging){
-			if(batStatus.batteryLevel > global.vars.CHARGING_LIMITS.max &&
-				! global.vars.NOTIFICATIONS_SHOWN.unplug){
-				global.vars.NOTIFICATIONS_SHOWN.plugin=false;
-				global.vars.NOTIFICATIONS_SHOWN.unplug=true;
-				showUnplugNotification(global.vars.CHARGING_LIMITS.max + " battery level reached");
-			}
-		}else{
-			if(batStatus.batteryLevel < global.vars.CHARGING_LIMITS.min &&
-				! global.vars.NOTIFICATIONS_SHOWN.plugin) {
-				global.vars.NOTIFICATIONS_SHOWN.plugin=true;
-				global.vars.NOTIFICATIONS_SHOWN.unplug=false;
-				showPluginNotification(global.vars.CHARGING_LIMITS.min + " battery level reached");
-			}
+				batteryDied.isBefore(leavingTime)) && 
+				! global.VARS.notifications.shown.pluginEco) {
+				global.VARS.notifications.shown.pluginEco=true;
+			global.VARS.notifications.shown.unplugEco=false;
+			showPluginNotification( "Battery won't last till " + cheapPeriodStart.format("hm"));
 		}
 	}
-	
+}else{
+		//80-40% mode
+		if(batStatus.charging){
+			if(batStatus.batteryLevel > global.VARS.battery.chargingLimits.max &&
+				! global.VARS.notifications.shown.unplug){
+				global.VARS.notifications.shown.plugin=false;
+			global.VARS.notifications.shown.unplug=true;
+			showUnplugNotification(global.VARS.battery.chargingLimits.max + " battery level reached");
+		}
+	}else{
+		if(batStatus.batteryLevel < global.VARS.battery.chargingLimits.min &&
+			! global.VARS.notifications.shown.plugin) {
+			global.VARS.notifications.shown.plugin=true;
+		global.VARS.notifications.shown.unplug=false;
+		showPluginNotification(global.VARS.battery.chargingLimits.min + " battery level reached");
+	}
 }
- 
+}
+
+}
+
+
+
+
 	//DEV TOFIX
 	// Load native UI library
 	var gui = require('nw.gui');
+	var _ = require('underscore');
 	// gui.Window.get().show();
+	var that=this;
+	console.log("_.throttle=");
+	console.log(_.throttle);
 
-//	gui.Window.get().showDevTools();
+	gui.Window.get().showDevTools();
 
 	var aboutWindowOptions= {
 		"toolbar": false,
@@ -136,7 +155,7 @@ function checkLevels(batStatus){
 		// "top": 100
 	};
 	var preferencesWindowOptions=aboutWindowOptions;
- 
+
 //https://github.com/rogerwang/node-webkit/wiki/Icons
 // Create a tray icon
 //https://github.com/google/material-design-icons/tree/master/device
@@ -179,9 +198,10 @@ function checkLevels(batStatus){
 		tooltip: "Silent sound's notifications",
 		key: "s",
 		modifiers: "cmd",
+		checked: global.VARS.notifications.silent,
 		// icon: 'A',
 		click: function(){
-			global.vars.SILENT_NOTIFICATIONS=this.checked;
+			global.VARS.notifications.silent=this.che\cked;
 		}
 	}));
 
@@ -193,7 +213,7 @@ function checkLevels(batStatus){
 		type: 'normal',
 		label: 'Quit',
 		click: function(){
-			this.batteryMonitor.delete();
+			that.batteryMonitor.delete();
 			gui.App.quit();
 		},
 		key: "q",
@@ -204,9 +224,10 @@ function checkLevels(batStatus){
 	
 	try {
 	    // Setup low-level battery watchdog
-	    this.batteryMonitor=Battery.getInstance(checkLevels,global.vars.REFRESH_INTERVAL);
+	    this.batteryMonitor=Battery.getInstance();
+	    this.batteryMonitor.setAutoCheck(global.VARS.battery.refreshInterval);
 	} catch (e) {
 		console.log(JSON.stringify(e));
 		// alert(e);
-	    gui.App.quit();
+		gui.App.quit();
 	}
