@@ -4,7 +4,7 @@
 
 "use strict";
 
-global.vars=require('./config.json');
+global.vars=require('../config.json');
 
 function setRunAtLogin() {
 	//TODO
@@ -28,7 +28,7 @@ function onShowNotif(sticky){
 function showPluginNotification(title,sticky) {
 
 	var notification = new Notification(title, {
-		icon: "imgs/flag-red.png",
+		icon: "../img/flag-red.png",
 		body: "Battery discharging too deep, please plug in the charger"
 	});
 
@@ -39,7 +39,7 @@ function showPluginNotification(title,sticky) {
 function showUnplugNotification(title,sticky){
 
 	var notification = new Notification(title, {
-		icon: "imgs/flag-green.png",
+		icon: "../img/flag-green.png",
 		body: "Battery charged enough, please unplug the charger"
 	});
 
@@ -234,7 +234,7 @@ try {
 	// Create a tray icon
 	//https://github.com/google/material-design-icons/tree/master/device
 
-	var tray = new gui.Tray({  icon: 'imgs/ic_battery_alert_black_24dp.png' });
+	var tray = new gui.Tray({  icon: 'img/ic_battery_alert_black_24dp.png' });
 	tray.tooltip="Nighlty charger";
 	tray.menu = createMenu(this.batteryMonitor.delete);
 
