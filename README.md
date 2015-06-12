@@ -1,4 +1,4 @@
-# Nightly Charger &#9790;
+# Owl Charger &#9790;
 
 A _former_ [node-webkit](http://nwjs.io/) playground project to reduce YOUR carboon footprint :) 
 -----------------------------------------------------------------------------

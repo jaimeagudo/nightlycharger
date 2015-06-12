@@ -1,4 +1,4 @@
-// Nightly Charger, http://github.com/jaimeagudo/nightlycharger
+// Owl Charger, http://github.com/jaimeagudo/nightlycharger
 // Copyright (C) 2014 Jaime Agudo López
 // GNU GPL v2
 
@@ -118,7 +118,7 @@ function createMenu(quitCallback){
 
 
 	//Levels
-	//Nightly-eco mode
+	//Owl-eco mode
 	menu.append(new gui.MenuItem({ type: 'separator'}));
 	menu.append(new gui.MenuItem({ 
 		type: 'normal',
@@ -245,8 +245,9 @@ try {
 	//Credits to https://github.com/rogerwang/node-webkit/wiki/Icons
 	//https://github.com/google/material-design-icons/tree/master/device
 	var tray = new gui.Tray({  
-		icon: 'img/ic_battery_alert_black_24dp.png',
-		tooltip: 'Nighlty charger ' + String.fromCharCode(9790),
+		// icon: 'img/ic_battery_alert_black_24dp.png',
+		icon: 'img/owl2.png',
+		tooltip: 'Owl charger ' + String.fromCharCode(9790),
 		menu: createMenu(this.batteryMonitor.delete)
 	});
 
