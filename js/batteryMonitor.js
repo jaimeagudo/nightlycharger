@@ -41,33 +41,25 @@ var Battery = (function() {
 			Battery.errorCB("Non compatible with "+  process.platform + ", cannot figure out battery status");
 		}
 
+		var bindCheck=_.bind(this.check,this);
+		bindCheck(this);
+		this.timer=setInterval(bindCheck, global.vars.monitor.intervalMs, this); 
 	}
 	Battery.prototype.status={};
 
-	Battery.prototype.batStatusListener=function(){}
-
-	Battery.prototype.setAutoCheck = function(batStatusListener,refreshIntervalMs){
-		//Start Polling battery status at defined period
-		//this has a wrong value on the intervaled function, pass it
-		console.log("autocheck");
-		this.batStatusListener=batStatusListener;
-		this.check=_.bind(this.check,this);
-		this.check();
-		this.timer=setInterval(this.check, refreshIntervalMs, this); 
+	Battery.prototype.batStatusListener=function(status){
+		global.emitter.emit("batteryMonitor.update",status);
 	};
-
 
 	//Returns a promise on the status check 
 	Battery.prototype.check = function(a){
 		a= a || this;
-		console.log("checking");
+		//console.log("check");
 
 		this.status=Battery.runCommand(a.command, a.args)
 			.then(a.parser,Battery.errorCB)
-			.then(this.batStatusListener,Battery.errorCB);
+			.then(a.batStatusListener,Battery.errorCB);
 
-//		return this.status;
-		// .then(a.batStatusListener,Battery.errorCB);
 	};
 
 	Battery.prototype.delete = function(){
@@ -147,6 +139,7 @@ var Battery = (function() {
 			if(isNaN(batteryLevel))
 				console.log("Ubuntu script failed to figure out battery level")
 			else
+				//TODO
 				return { 
 					batteryLevel: batteryLevel,
 					remainingBatteryTime: 100,

@@ -3,7 +3,6 @@
 		"silent": false,
 		"sticky": false,
 		"showTimeMs": 10000
-
 	},
 	"monitor": {
 		"intervalMs" : 10000,
@@ -11,7 +10,17 @@
 			"max" : 80,
 			"min" : 40,
 			"minGap" : 10
+		}
+	},
+	"ecoMode": { 
+		"active": true,
+		"normalPeriod": {
+			"start": { "hour" : 22 },
+			"end" : { "hour" : 12 }
 		},
-		"cheapMode" : false
+		"DSTSPeriod": {
+			"start": { "hour" : 23 },
+			"end" : { "hour" : 13 }
+		}
 	}
 }

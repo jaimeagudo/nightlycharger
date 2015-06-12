@@ -6,12 +6,16 @@
 
 global.vars=require('../config.json');
 
+//////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////// UI FUNCTIONALITY ////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////
+
 function setRunAtLogin() {
 	//TODO
 	console.log("Set run at login");
 }
 
-function onShowNotif(sticky){
+function onShowNotif(){
 
 	// play sound on show
 	if(!global.vars.notifications.silent){
@@ -20,89 +24,30 @@ function onShowNotif(sticky){
 	}
 
     // auto close after notifications.showTimeMs
-    if (!sticky)
+    if (!global.vars.notifications.sticky)
     	setTimeout(function() {notification.close();}, global.vars.notifications.showTimeMs);
 }
 
 
-function showPluginNotification(title,sticky) {
+function showPluginNotification(title) {
 
 	var notification = new Notification(title, {
 		icon: "../img/flag-red.png",
 		body: "Battery discharging too deep, please plug in the charger"
 	});
 
-	notification.onshow = onShowNotif.bind(this,title, global.vars.notifications.sticky);
+	notification.onshow = onShowNotif.bind(this,title);
 }
 
 
-function showUnplugNotification(title,sticky){
+function showUnplugNotification(title){
 
 	var notification = new Notification(title, {
 		icon: "../img/flag-green.png",
 		body: "Battery charged enough, please unplug the charger"
 	});
 
-	notification.onshow = onShowNotif.bind(this,title,global.vars.notifications.sticky);
-}
-
-/**
- * Updates UI 
- */
- function checkLevels(batStatus){
-
-//	console.log("checkLevels"+JSON.stringify(batStatus));
-if(global.vars.monitor.cheapMode || leavingTime){
-	var now = moment();
-	var cheapPeriodEnd, cheapPeriodStart;
-
-		if(now.isDSTS()){                //true during summer
-			cheapPeriodStart=moment({ hour : 23 });
-			cheapPeriodEnd=moment({ hour : 13 });
-		} else {
-			cheapPeriodStart=moment({ hour : 22 });
-			cheapPeriodEnd=moment({ hour : 12 });
-		}
-
-		var batteryDied=now.add(batStatus.remainingTime);		
-		var leavingTime=moment("2182-05-04T00:00:00");
-
-		if(batStatus.charging) {
-			if((batteryDied.isAfter(cheapPeriodStart) ||
-				batteryDied.isAfter(leavingTime)) && 
-				! global.state.notifications.shown.unplugEco){
-				global.state.notifications.shown.unplugEco=true;
-			global.state.notifications.shown.pluginEco=false;
-			showUnplugNotification( "Battery enough till " + cheapPeriodStart.format("hm"));
-		}
-		} else { //Discharging battery
-			if((batteryDied.isBefore(cheapPeriodStart) ||
-				batteryDied.isBefore(leavingTime)) && 
-				! global.state.notifications.shown.pluginEco) {
-				global.state.notifications.shown.pluginEco=true;
-			global.state.notifications.shown.unplugEco=false;
-			showPluginNotification( "Battery won't last till " + cheapPeriodStart.format("hm"));
-		}
-	}
-}else{
-		//80-40% mode
-		if(batStatus.charging){
-			if(batStatus.batteryLevel > global.vars.monitor.limits.max &&
-				! global.state.notifications.shown.unplug){
-				global.state.notifications.shown.plugin=false;
-			global.state.notifications.shown.unplug=true;
-			showUnplugNotification(global.vars.monitor.limits.max + " battery level reached");
-		}
-	}else{
-		if(batStatus.batteryLevel < global.vars.monitor.limits.min &&
-			! global.state.notifications.shown.plugin) {
-			global.state.notifications.shown.plugin=true;
-		global.state.notifications.shown.unplug=false;
-		showPluginNotification(global.vars.monitor.limits.min + " battery level reached");
-	}
-}
-}
-
+	notification.onshow = onShowNotif.bind(this,title);
 }
 
 
@@ -113,8 +58,8 @@ function createMenu(quitCallback){
 		"toolbar": false,
 		"frame": true,
 		// "position": "center",
-		"width": 160,
-		"height": 240
+		"width": 200,
+		"height": 260
 		// "left": 100,
 		// "top": 100
 	};
@@ -189,6 +134,70 @@ function createMenu(quitCallback){
 	return menu;
 }
 
+//////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////// BUSINESS LOGIC ///////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////
+
+ function ecoCheck(batStatus){
+
+ 	console.log("ecoCheck"+JSON.stringify(batStatus));
+
+ 	var now = moment();
+ 	var cheapPeriodEnd, cheapPeriodStart;
+
+ 	var cheapPeriod= now.isDSTS() ? global.vars.ecoMode.DSTSPeriod : global.vars.ecoMode.normalPeriod;
+ 	cheapPeriodStart=moment(cheapPeriod.start);
+ 	cheapPeriodEnd=moment(cheapPeriod.end);
+
+ 	console.log("remainingTime="+batStatus.remainingTime);
+
+ 	var batteryDied=now.add(batStatus.remainingTime);		
+ 	var leavingTime=moment("2182-05-04T00:00:00");
+
+ 	if(batStatus.charging) {
+ 		if((batteryDied.isAfter(cheapPeriodStart) ||
+ 			batteryDied.isAfter(leavingTime)) && 
+ 			! global.state.notifications.shown.unplugEco){
+	 		global.state.notifications.shown.unplugEco=true;
+	 		global.state.notifications.shown.pluginEco=false;
+	 		showUnplugNotification( "Battery enough till " + cheapPeriodStart.format("hm"));
+	 	}	
+	} else { //Discharging battery
+		if((batteryDied.isBefore(cheapPeriodStart) ||
+			batteryDied.isBefore(leavingTime)) && 
+			! global.state.notifications.shown.pluginEco) {
+			global.state.notifications.shown.pluginEco=true;
+			global.state.notifications.shown.unplugEco=false;
+			showPluginNotification( "Battery won't last till " + cheapPeriodStart.format("hm"));
+		}
+	}
+}
+
+/**
+*
+*/
+function healthyCheck(batStatus){
+ 	console.log("healthyCheck"+JSON.stringify(batStatus));
+
+	//80-40% mode
+	if(batStatus.charging){
+		if(batStatus.batteryLevel > global.vars.monitor.limits.max &&
+			! global.state.notifications.shown.unplug){
+			global.state.notifications.shown.plugin=false;
+			global.state.notifications.shown.unplug=true;
+			showUnplugNotification(global.vars.monitor.limits.max + " battery level reached");
+		}
+	}else{
+		if(batStatus.batteryLevel < global.vars.monitor.limits.min &&
+			! global.state.notifications.shown.plugin) {
+			global.state.notifications.shown.plugin=true;
+			global.state.notifications.shown.unplug=false;
+			showPluginNotification(global.vars.monitor.limits.min + " battery level reached");
+		}
+	}	
+}
+
+
 
 //////////////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -209,38 +218,41 @@ global.state= {
 try {
 	// Load native UI library
 	var gui = require('nw.gui');
-	gui.Window.get().showDevTools();
-
 	var _ = require('underscore');
 	var EventEmitter=require('events').EventEmitter;
+
+	gui.Window.get().showDevTools();
 	global.emitter= new EventEmitter();
 
-	global.emitter.on('newmin', function (min) {
-		console.log('min!='+min);
+	global.emitter.on('batteryControl.newmin', function (min) {
+		console.log('batteryControl.newmin='+min);
 		global.vars.monitor.limits.min=min;
 	});
 
-	global.emitter.on('newmax', function (max) {
-		console.log('max!='+max);
+	global.emitter.on('batteryControl.newmax', function (max) {
+		console.log('batteryControl.newmax='+max);
 		global.vars.monitor.limits.max=max;
 	});
+
+	var checkLevels= (global.vars.ecoMode.active || leavingTime) ? ecoCheck : healthyCheck;
+	global.emitter.on('batteryMonitor.update', checkLevels);
 
 
     // Setup low-level battery watchdog
     this.batteryMonitor=Battery.getInstance();
-    this.batteryMonitor.setAutoCheck(checkLevels,global.vars.monitor.intervalMs);
 
-	//Credits to https://github.com/rogerwang/node-webkit/wiki/Icons
 	// Create a tray icon
+	//Credits to https://github.com/rogerwang/node-webkit/wiki/Icons
 	//https://github.com/google/material-design-icons/tree/master/device
-
-	var tray = new gui.Tray({  icon: 'img/ic_battery_alert_black_24dp.png' });
-	tray.tooltip="Nighlty charger";
-	tray.menu = createMenu(this.batteryMonitor.delete);
+	var tray = new gui.Tray({  
+		icon: 'img/ic_battery_alert_black_24dp.png',
+		tooltip: 'Nighlty charger ' + String.fromCharCode(9790),
+		menu: createMenu(this.batteryMonitor.delete)
+	});
 
 } catch (e) {
 	console.log(JSON.stringify(e));
 	// alert(e);
-	this.batteryMonitor.delete();
+	// this.batteryMonitor.delete();
 	gui.App.quit();
 }
